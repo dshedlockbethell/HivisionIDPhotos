@@ -1,6 +1,8 @@
 import gradio as gr
 import os
 import pathlib
+from PIL import Image
+import numpy as np
 from demo.locales import LOCALES
 from demo.processor import IDPhotoProcessor
 
@@ -134,6 +136,37 @@ def create_ui(
                     # 自定义颜色HEX
                     with gr.Row(visible=False) as custom_color_hex:
                         custom_color_hex_value = gr.Text(value="000000", label="Hex", interactive=True)
+
+                    with gr.Row(visible=False) as custom_background_row:
+                        custom_background_image = gr.Image(
+                            label=LOCALES["custom_bg_image"][DEFAULT_LANG]["label"],
+                            height=200,
+                            interactive=False,
+                            type="numpy",
+                        )
+                        custom_background_upload = gr.UploadButton(
+                            label=LOCALES["custom_bg_image_button"][DEFAULT_LANG]["label"],
+                            file_types=["image"],
+                            file_count="single",
+                        )
+
+                    custom_background_state = gr.State(value=None)
+
+                    def load_custom_background(file):
+                        if file is None:
+                            return None, gr.update(value=None)
+                        if isinstance(file, list) and file:
+                            file = file[0]
+                        file_obj = getattr(file, "name", None) or file
+                        with Image.open(file_obj) as img:
+                            image_np = np.array(img.convert("RGB"))
+                        return image_np, gr.update(value=image_np)
+
+                    custom_background_upload.upload(
+                        fn=load_custom_background,
+                        inputs=[custom_background_upload],
+                        outputs=[custom_background_state, custom_background_image],
+                    )
 
                     # 渲染模式
                     render_options = gr.Radio(
@@ -446,6 +479,12 @@ def create_ui(
                         choices=LOCALES["bg_color"][language]["choices"],
                         value=LOCALES["bg_color"][language]["choices"][0],
                     ),
+                    custom_background_image: gr.update(
+                        label=LOCALES["custom_bg_image"][language]["label"]
+                    ),
+                    custom_background_upload: gr.update(
+                        label=LOCALES["custom_bg_image_button"][language]["label"]
+                    ),
                     img_but: gr.update(value=LOCALES["button"][language]["label"]),
                     render_options: gr.update(
                         label=LOCALES["render_mode"][language]["label"],
@@ -587,9 +626,11 @@ def create_ui(
                 }
 
             def change_color(colors, lang):
+                choices = LOCALES["bg_color"][lang]["choices"]
                 return {
-                    custom_color_rgb: gr.update(visible = colors == LOCALES["bg_color"][lang]["choices"][-2]),
-                    custom_color_hex: gr.update(visible = colors == LOCALES["bg_color"][lang]["choices"][-1]),
+                    custom_color_rgb: gr.update(visible=colors == choices[-2]),
+                    custom_color_hex: gr.update(visible=colors == choices[-1]),
+                    custom_background_row: gr.update(visible=colors == choices[-3]),
                 }
                 
 
@@ -709,7 +750,7 @@ def create_ui(
             color_options.input(
                 change_color,
                 inputs=[color_options, language_options],
-                outputs=[custom_color_rgb, custom_color_hex],
+                outputs=[custom_color_rgb, custom_color_hex, custom_background_row],
             )
 
             # 图片kb
@@ -739,6 +780,7 @@ def create_ui(
                     custom_color_G,
                     custom_color_B,
                     custom_color_hex_value,
+                    custom_background_state,
                     custom_size_height_px,
                     custom_size_width_px,
                     custom_size_height_mm,

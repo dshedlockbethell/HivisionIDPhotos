@@ -37,6 +37,7 @@ class IDPhotoProcessor:
         custom_color_G,
         custom_color_B,
         custom_color_hex_value,
+        custom_background_image,
         custom_size_height,
         custom_size_width,
         custom_size_height_mm,
@@ -93,7 +94,13 @@ class IDPhotoProcessor:
             jpeg_format_option = False
         
         idphoto_json = self._initialize_idphoto_json(
-            mode_option, color_option, render_option_index, image_kb_options, layout_photo_crop_line_option, jpeg_format_option, print_switch
+            mode_option,
+            color_option,
+            render_option_index,
+            image_kb_options,
+            layout_photo_crop_line_option,
+            jpeg_format_option,
+            print_switch,
         )
 
         # 处理尺寸模式
@@ -110,7 +117,7 @@ class IDPhotoProcessor:
             return size_result  # 返回错误信息
 
         # 处理颜色模式
-        self._process_color_mode(
+        color_result = self._process_color_mode(
             idphoto_json,
             language,
             color_option,
@@ -118,7 +125,10 @@ class IDPhotoProcessor:
             custom_color_G,
             custom_color_B,
             custom_color_hex_value,
+            custom_background_image,
         )
+        if isinstance(color_result, list):
+            return color_result
 
         # 如果设置了自定义KB大小
         if (
@@ -192,6 +202,7 @@ class IDPhotoProcessor:
             "layout_photo_crop_line_option": layout_photo_crop_line_option,
             "jpeg_format_option": jpeg_format_option,
             "print_switch": print_switch,
+            "background_image": None,
         }
 
     # 处理尺寸模式
@@ -249,15 +260,22 @@ class IDPhotoProcessor:
         custom_color_G,
         custom_color_B,
         custom_color_hex_value,
+        custom_background_image,
     ):
         """处理颜色模式"""
+        bg_color_choices = LOCALES["bg_color"][language]["choices"]
+        custom_rgb_choice = bg_color_choices[-2]
+        custom_hex_choice = bg_color_choices[-1]
+        custom_image_choice = bg_color_choices[-3]
+        american_style_choice = bg_color_choices[-4]
+
         # 如果选择了自定义颜色BGR
-        if idphoto_json["color_mode"] == LOCALES["bg_color"][language]["choices"][-2]:
+        if idphoto_json["color_mode"] == custom_rgb_choice:
             idphoto_json["color_bgr"] = tuple(
                 map(range_check, [custom_color_R, custom_color_G, custom_color_B])
             )
         # 如果选择了自定义颜色HEX
-        elif idphoto_json["color_mode"] == LOCALES["bg_color"][language]["choices"][-1]:
+        elif idphoto_json["color_mode"] == custom_hex_choice:
             hex_color = custom_color_hex_value
             # 将十六进制颜色转换为RGB颜色，如果长度为6，则直接转换，如果长度为7，则去掉#号再转换
             if len(hex_color) == 6:
@@ -273,8 +291,15 @@ class IDPhotoProcessor:
                 raise ValueError(
                     "Invalid hex color. You can only use 6 or 7 characters. For example: #FFFFFF or FFFFFF"
                 )
+        # 如果选择了自定义背景图
+        elif idphoto_json["color_mode"] == custom_image_choice:
+            if custom_background_image is None:
+                return self._create_background_image_error(language)
+            idphoto_json["background_image"] = cv2.cvtColor(
+                custom_background_image.astype(np.uint8), cv2.COLOR_RGB2BGR
+            )
         # 如果选择了美式证件照
-        elif idphoto_json["color_mode"] == LOCALES["bg_color"][language]["choices"][-3]:
+        elif idphoto_json["color_mode"] == american_style_choice:
             idphoto_json["color_bgr"] = (255, 255, 255)
         else:
             hex_color = LOCALES["bg_color"][language]["develop"][color_option]
@@ -411,7 +436,25 @@ class IDPhotoProcessor:
         render_modes = {0: "pure_color", 1: "updown_gradient", 2: "center_gradient"}
         render_mode = render_modes[idphoto_json["render_mode"]]
 
-        if idphoto_json["color_mode"] != LOCALES["bg_color"][language]["choices"][-3]:
+        bg_color_choices = LOCALES["bg_color"][language]["choices"]
+        american_style_choice = bg_color_choices[-4]
+        custom_image_choice = bg_color_choices[-3]
+
+        if (
+            idphoto_json["color_mode"] == custom_image_choice
+            and idphoto_json["background_image"] is not None
+        ):
+            result_image_standard = np.uint8(
+                add_background_with_image(
+                    result_image_standard, background_image=idphoto_json["background_image"]
+                )
+            )
+            result_image_hd = np.uint8(
+                add_background_with_image(
+                    result_image_hd, background_image=idphoto_json["background_image"]
+                )
+            )
+        elif idphoto_json["color_mode"] != american_style_choice:
             result_image_standard = np.uint8(
                 add_background(
                     result_image_standard, bgr=idphoto_json["color_bgr"], mode=render_mode
@@ -426,7 +469,7 @@ class IDPhotoProcessor:
         else:
             result_image_standard = np.uint8(
                 add_background_with_image(
-                    result_image_standard, 
+                    result_image_standard,
                     background_image=cv2.imread(os.path.join(base_path, "assets", "american-style.png"))
                 )
             )
@@ -679,4 +722,16 @@ class IDPhotoProcessor:
                 value=LOCALES["size_mode"][language]["custom_size_eror"], visible=True
             ),
             None,
+        ]
+
+    def _create_background_image_error(self, language):
+        """当未上传自定义背景图时创建错误响应"""
+        return [gr.update(value=None) for _ in range(4)] + [
+            gr.update(visible=False),
+            gr.update(value=None),
+            gr.update(value=None),
+            gr.update(
+                value=LOCALES["notification"][language]["custom_bg_error"],
+                visible=True,
+            ),
         ]

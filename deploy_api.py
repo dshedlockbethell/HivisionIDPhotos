@@ -58,6 +58,8 @@ async def idphoto_inference(
     head_height_ratio: float = Form(0.45),
     top_distance_max: float = Form(0.12),
     top_distance_min: float = Form(0.10),
+    side_padding_left: float = Form(0.0),
+    side_padding_right: float = Form(0.0),
     brightness_strength: float = Form(0),
     contrast_strength: float = Form(0),
     sharpen_strength: float = Form(0),
@@ -86,6 +88,7 @@ async def idphoto_inference(
             head_measure_ratio=head_measure_ratio,
             head_height_ratio=head_height_ratio,
             head_top_range=(top_distance_max, top_distance_min),
+            side_padding=(side_padding_left, side_padding_right),
             face_alignment=face_align,
             whitening_strength=whitening_strength,
             brightness_strength=brightness_strength,
@@ -343,6 +346,8 @@ async def idphoto_crop_inference(
     head_height_ratio: float = Form(0.45),
     top_distance_max: float = Form(0.12),
     top_distance_min: float = Form(0.10),
+    side_padding_left: float = Form(0.0),
+    side_padding_right: float = Form(0.0),
 ):
     if input_image_base64:
         img = base64_2_numpy(input_image_base64)
@@ -363,6 +368,7 @@ async def idphoto_crop_inference(
             head_measure_ratio=head_measure_ratio,
             head_height_ratio=head_height_ratio,
             head_top_range=(top_distance_max, top_distance_min),
+            side_padding=(side_padding_left, side_padding_right),
             crop_only=True,
         )
     except FaceError:

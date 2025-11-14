@@ -60,6 +60,8 @@ python deploy_api.py
 | head_height_ratio | float | 否 | 面部中心与照片顶部的高度比例，默认为`0.45` |
 | top_distance_max | float | 否 | 头部与照片顶部距离的比例最大值，默认为`0.12` |
 | top_distance_min | float | 否 | 头部与照片顶部距离的比例最小值，默认为`0.1` |
+| side_padding_left | float | 否 | 左侧额外留白比例，增大该值可让人物整体向右移动，默认为`0` |
+| side_padding_right | float | 否 | 右侧额外留白比例，增大该值可让人物整体向左移动，默认为`0` |
 | brightness_strength | float | 否 | 亮度调整强度，默认为`0` |
 | contrast_strength | float | 否 | 对比度调整强度，默认为`0` |
 | sharpen_strength | float | 否 | 锐化调整强度，默认为`0` |
@@ -226,6 +228,8 @@ python deploy_api.py
 | head_height_ratio | float | 否 | 面部中心与照片顶部的高度比例，默认为`0.45` |
 | top_distance_max | float | 否 | 头部与照片顶部距离的比例最大值，默认为`0.12` |
 | top_distance_min | float | 否 | 头部与照片顶部距离的比例最小值，默认为`0.1` |
+| side_padding_left | float | 否 | 左侧额外留白比例，增大该值可让人物整体向右移动，默认为`0` |
+| side_padding_right | float | 否 | 右侧额外留白比例，增大该值可让人物整体向左移动，默认为`0` |
 
 **返回参数：**
 

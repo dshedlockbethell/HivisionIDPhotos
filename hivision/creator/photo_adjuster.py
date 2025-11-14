@@ -38,6 +38,9 @@ def adjust_photo(ctx: Context):
         int(standard_size[0] * resize_ratio_single),
         int(standard_size[1] * resize_ratio_single),
     )  # 裁剪框大小
+    padding_left_px = int(crop_size[1] * max(params.side_padding[0], 0))
+    padding_right_px = int(crop_size[1] * max(params.side_padding[1], 0))
+    need_horizontal_padding = padding_left_px > 0 or padding_right_px > 0
 
     # 裁剪框的定位信息
     x1 = int(face_center[0] - crop_size[1] / 2)
@@ -77,20 +80,26 @@ def adjust_photo(ctx: Context):
     )
 
     # Step6. 对照片的第二轮裁剪
-    if status_left_right == 0 and status_top == 0:
-        result_image = cut_image
-    else:
+    final_x1, final_y1 = x1, y1
+    final_x2, final_y2 = x2, y2
+    if status_left_right != 0 or status_top != 0 or need_horizontal_padding:
+        final_x1 = x1 + x_left - padding_left_px
+        final_x2 = x2 - x_right + padding_right_px
+        final_y1 = y1 + cut_value_top + status_top * move_value
+        final_y2 = y2 - cut_value_top + status_top * move_value
         result_image = IDphotos_cut(
-            x1 + x_left,
-            y1 + cut_value_top + status_top * move_value,
-            x2 - x_right,
-            y2 - cut_value_top + status_top * move_value,
+            final_x1,
+            final_y1,
+            final_x2,
+            final_y2,
             ctx.matting_image,
         )
+    else:
+        result_image = cut_image
 
     # 换装参数准备
-    relative_x = x - (x1 + x_left)
-    relative_y = y - (y1 + cut_value_top + status_top * move_value)
+    relative_x = x - final_x1
+    relative_y = y - final_y1
 
     # Step7. 当照片底部存在空隙时，下拉至底部
     result_image, y_high = move(result_image.astype(np.uint8))

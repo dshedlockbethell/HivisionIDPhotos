@@ -59,6 +59,8 @@ It is important to note that both generated photos are transparent (RGBA four-ch
 | head_height_ratio | float | No | The ratio of the face center to the top of the photo, with a default value of `0.45`. |
 | top_distance_max | float | No | The maximum ratio of the head to the top of the photo, with a default value of `0.12`. |
 | top_distance_min | float | No | The minimum ratio of the head to the top of the photo, with a default value of `0.1`. |
+| side_padding_left | float | No | Extra horizontal padding ratio applied to the left side of the crop to increase empty space or shift the subject right, with a default value of `0`. |
+| side_padding_right | float | No | Extra horizontal padding ratio applied to the right side of the crop to increase empty space or shift the subject left, with a default value of `0`. |
 | brightness_strength | float | No | Brightness adjustment strength, default is `0` |
 | contrast_strength | float | No | Contrast adjustment strength, default is `0` |
 | sharpen_strength | float | No | Sharpening adjustment strength, default is `0` |
@@ -226,6 +228,8 @@ The functionality of the `ID Photo Cropping` API is to receive an RGBA image (tr
 | head_height_ratio | float | No | The ratio of the face center to the top of the photo, with a default value of `0.45`. |
 | top_distance_max | float | No | The maximum ratio of the head to the top of the photo, with a default value of `0.12`. |
 | top_distance_min | float | No | The minimum ratio of the head to the top of the photo, with a default value of `0.1`. |
+| side_padding_left | float | No | Extra horizontal padding ratio applied to the left side of the crop to increase empty space or shift the subject right, with a default value of `0`. |
+| side_padding_right | float | No | Extra horizontal padding ratio applied to the right side of the crop to increase empty space or shift the subject left, with a default value of `0`. |
 
 **Return Parameters:**
 

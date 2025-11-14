@@ -20,6 +20,7 @@ class Params:
         head_measure_ratio: float = 0.2,
         head_height_ratio: float = 0.45,
         head_top_range: float = (0.12, 0.1),
+        side_padding: Tuple[float, float] = (0.0, 0.0),
         face: Tuple[int, int, int, int] = None,
         whitening_strength: int = 0,
         brightness_strength: int = 0,
@@ -35,6 +36,7 @@ class Params:
         self.__head_measure_ratio = head_measure_ratio
         self.__head_height_ratio = head_height_ratio
         self.__head_top_range = head_top_range
+        self.__side_padding = side_padding
         self.__face = face
         self.__whitening_strength = whitening_strength
         self.__brightness_strength = brightness_strength
@@ -62,6 +64,10 @@ class Params:
     @property
     def head_top_range(self):
         return self.__head_top_range
+
+    @property
+    def side_padding(self):
+        return self.__side_padding
 
     @property
     def crop_only(self):

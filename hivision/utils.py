@@ -331,8 +331,39 @@ def add_background_with_image(input_image: np.ndarray, background_image: np.ndar
             "The input image must have 4 channels. 输入图像必须有4个通道，即透明图像。"
         )
 
-    # 确保背景图像与输入图像大小一致
-    background_image = cv2.resize(background_image, (width, height), cv2.INTER_AREA)
+    # Resize the background while preserving its aspect ratio, then center-crop
+    bg_height, bg_width = background_image.shape[:2]
+    scale = max(height / bg_height, width / bg_width)
+    new_width = max(int(np.ceil(bg_width * scale)), 1)
+    new_height = max(int(np.ceil(bg_height * scale)), 1)
+
+    interpolation = cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC
+    background_image = cv2.resize(background_image, (new_width, new_height), interpolation)
+
+    # Center-crop to the exact output dimensions
+    y_start = max((new_height - height) // 2, 0)
+    x_start = max((new_width - width) // 2, 0)
+    y_end = y_start + height
+    x_end = x_start + width
+    background_image = background_image[y_start:y_end, x_start:x_end]
+
+    # Pad in the unlikely event rounding produced a slightly smaller crop
+    crop_height, crop_width = background_image.shape[:2]
+    if crop_height < height or crop_width < width:
+        pad_top = max((height - crop_height) // 2, 0)
+        pad_bottom = max(height - crop_height - pad_top, 0)
+        pad_left = max((width - crop_width) // 2, 0)
+        pad_right = max(width - crop_width - pad_left, 0)
+        background_image = cv2.copyMakeBorder(
+            background_image,
+            pad_top,
+            pad_bottom,
+            pad_left,
+            pad_right,
+            borderType=cv2.BORDER_REFLECT,
+        )
+        background_image = background_image[:height, :width]
+
     background_image = cv2.cvtColor(background_image, cv2.COLOR_BGR2RGB)
     b2, g2, r2 = cv2.split(background_image)
 

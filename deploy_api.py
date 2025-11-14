@@ -8,6 +8,7 @@ from hivision.creator.layout_calculator import (
 from hivision.creator.choose_handler import choose_handler
 from hivision.utils import (
     add_background,
+    add_background_with_image,
     resize_image_to_kb,
     bytes_2_base64,
     base64_2_numpy,
@@ -155,6 +156,8 @@ async def photo_add_background(
     kb: int = Form(None),
     dpi: int = Form(300),
     render: int = Form(0),
+    background_image: UploadFile = File(None),
+    background_image_base64: str = Form(None),
 ):
     render_choice = ["pure_color", "updown_gradient", "center_gradient"]
 
@@ -165,14 +168,29 @@ async def photo_add_background(
         nparr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
 
-    color = hex_to_rgb(color)
-    color = (color[2], color[1], color[0])
+    background = None
+    if background_image_base64:
+        background = base64_2_numpy(background_image_base64)
+    elif background_image is not None:
+        background_bytes = await background_image.read()
+        nparr = np.frombuffer(background_bytes, np.uint8)
+        background = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
 
-    result_image = add_background(
-        img,
-        bgr=color,
-        mode=render_choice[render],
-    ).astype(np.uint8)
+    if background is not None:
+        if background.ndim == 2:
+            background = cv2.cvtColor(background, cv2.COLOR_GRAY2BGR)
+        elif background.ndim == 3 and background.shape[2] == 4:
+            background = cv2.cvtColor(background, cv2.COLOR_BGRA2BGR)
+        result_image = add_background_with_image(img, background).astype(np.uint8)
+    else:
+        color = hex_to_rgb(color)
+        color = (color[2], color[1], color[0])
+
+        result_image = add_background(
+            img,
+            bgr=color,
+            mode=render_choice[render],
+        ).astype(np.uint8)
 
     result_image = cv2.cvtColor(result_image, cv2.COLOR_RGB2BGR)
     if kb:

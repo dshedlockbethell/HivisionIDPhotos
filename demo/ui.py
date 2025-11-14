@@ -688,6 +688,8 @@ def create_ui(
                     size_list_options,
                     mode_options,
                     color_options,
+                    custom_background_image,
+                    custom_background_upload,
                     img_but,
                     render_options,
                     image_kb_options,

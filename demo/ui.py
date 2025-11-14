@@ -204,6 +204,23 @@ def create_ui(
                         label=LOCALES["top_distance"][DEFAULT_LANG]["label"],
                         interactive=True,
                     )
+                    with gr.Row():
+                        left_padding_option = gr.Slider(
+                            minimum=0.0,
+                            maximum=0.3,
+                            value=0.0,
+                            step=0.01,
+                            label=LOCALES["side_padding_left"][DEFAULT_LANG]["label"],
+                            interactive=True,
+                        )
+                        right_padding_option = gr.Slider(
+                            minimum=0.0,
+                            maximum=0.3,
+                            value=0.0,
+                            step=0.01,
+                            label=LOCALES["side_padding_right"][DEFAULT_LANG]["label"],
+                            interactive=True,
+                        )
 
                     image_kb_options = gr.Radio(
                         choices=LOCALES["image_kb"][DEFAULT_LANG]["choices"],
@@ -523,6 +540,12 @@ def create_ui(
                     top_distance_option: gr.update(
                         label=LOCALES["top_distance"][language]["label"]
                     ),
+                    left_padding_option: gr.update(
+                        label=LOCALES["side_padding_left"][language]["label"]
+                    ),
+                    right_padding_option: gr.update(
+                        label=LOCALES["side_padding_right"][language]["label"]
+                    ),
                     key_parameter_tab: gr.update(
                         label=LOCALES["key_param"][language]["label"]
                     ),
@@ -704,6 +727,8 @@ def create_ui(
                     img_output_layout,
                     head_measure_ratio_option,
                     top_distance_option,
+                    left_padding_option,
+                    right_padding_option,
                     key_parameter_tab,
                     advance_parameter_tab,
                     watermark_parameter_tab,
@@ -800,6 +825,8 @@ def create_ui(
                     face_detect_model_options,
                     head_measure_ratio_option,
                     top_distance_option,
+                    left_padding_option,
+                    right_padding_option,
                     whitening_option,
                     image_dpi_options,
                     custom_image_dpi_size,

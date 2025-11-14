@@ -255,6 +255,34 @@ LOCALES = {
             "label": "상단 거리",
         },
     },
+    "side_padding_left": {
+        "en": {
+            "label": "Left padding",
+        },
+        "zh": {
+            "label": "左侧留白",
+        },
+        "ja": {
+            "label": "左余白",
+        },
+        "ko": {
+            "label": "왼쪽 여백",
+        },
+    },
+    "side_padding_right": {
+        "en": {
+            "label": "Right padding",
+        },
+        "zh": {
+            "label": "右侧留白",
+        },
+        "ja": {
+            "label": "右余白",
+        },
+        "ko": {
+            "label": "오른쪽 여백",
+        },
+    },
     "image_kb": {
         "en": {
             "label": "Set KB size",

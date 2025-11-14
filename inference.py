@@ -3,7 +3,13 @@ import cv2
 import argparse
 import numpy as np
 from hivision.error import FaceError
-from hivision.utils import hex_to_rgb, resize_image_to_kb, add_background, save_image_dpi_to_bytes
+from hivision.utils import (
+    hex_to_rgb,
+    resize_image_to_kb,
+    add_background,
+    add_background_with_image,
+    save_image_dpi_to_bytes,
+)
 from hivision import IDCreator
 from hivision.creator.layout_calculator import (
     generate_layout_array,
@@ -47,6 +53,11 @@ parser.add_argument("-o", "--output_image_dir", help="保存图像路径", requi
 parser.add_argument("--height", help="证件照尺寸-高", default=413)
 parser.add_argument("--width", help="证件照尺寸-宽", default=295)
 parser.add_argument("-c", "--color", help="证件照背景色", default="638cce")
+parser.add_argument(
+    "--background_image",
+    help="自定义背景图像路径，仅在 -t add_background 时有效",
+    default=None,
+)
 parser.add_argument("--hd", type=bool, help="是否输出高清照", default=True)
 parser.add_argument(
     "-k", "--kb", help="输出照片的 KB 值，仅对换底和制作排版照生效", default=None
@@ -120,21 +131,38 @@ elif args.type == "add_background":
 
     render_choice = ["pure_color", "updown_gradient", "center_gradient"]
 
-    # 将字符串转为元组
-    color = hex_to_rgb(args.color)
-    # 将元祖的 0 和 2 号数字交换
-    color = (color[2], color[1], color[0])
-
-    result_image = add_background(
-        input_image, bgr=color, mode=render_choice[args.render]
-    )
-    result_image = result_image.astype(np.uint8)
-    result_image = cv2.cvtColor(result_image, cv2.COLOR_RGBA2BGRA)
-    
-    if args.kb:
-        resize_image_to_kb(result_image, args.output_image_dir, int(args.kb), dpi=args.dpi)
+    if args.background_image:
+        background_image = cv2.imread(args.background_image, cv2.IMREAD_UNCHANGED)
+        if background_image is None:
+            raise FileNotFoundError(
+                f"未找到自定义背景图像: {args.background_image}"
+            )
+        if background_image.ndim == 2:
+            background_image = cv2.cvtColor(background_image, cv2.COLOR_GRAY2BGR)
+        elif background_image.ndim == 3 and background_image.shape[2] == 4:
+            background_image = cv2.cvtColor(background_image, cv2.COLOR_BGRA2BGR)
+        result_image = add_background_with_image(
+            input_image, background_image=background_image
+        )
     else:
-        save_image_dpi_to_bytes(cv2.cvtColor(result_image, cv2.COLOR_RGBA2BGRA), args.output_image_dir, dpi=args.dpi)
+        # 将字符串转为元组
+        color = hex_to_rgb(args.color)
+        # 将元祖的 0 和 2 号数字交换
+        color = (color[2], color[1], color[0])
+
+        result_image = add_background(
+            input_image, bgr=color, mode=render_choice[args.render]
+        )
+    result_image = result_image.astype(np.uint8)
+    if result_image.ndim == 3 and result_image.shape[2] == 4:
+        save_ready = cv2.cvtColor(result_image, cv2.COLOR_RGBA2BGRA)
+    else:
+        save_ready = cv2.cvtColor(result_image, cv2.COLOR_RGB2BGR)
+
+    if args.kb:
+        resize_image_to_kb(save_ready, args.output_image_dir, int(args.kb), dpi=args.dpi)
+    else:
+        save_image_dpi_to_bytes(save_ready, args.output_image_dir, dpi=args.dpi)
 
 # 如果模式是生成排版照
 elif args.type == "generate_layout_photos":

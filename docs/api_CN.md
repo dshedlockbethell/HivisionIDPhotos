@@ -79,7 +79,7 @@ python deploy_api.py
 
 接口名：`add_background`
 
-`添加背景色`接口的逻辑是接收一张 RGBA 图像（透明图），根据`color`添加背景色，合成一张 JPG 图像。
+`添加背景色`接口的逻辑是接收一张 RGBA 图像（透明图），根据`color`添加背景色或按照`background_image`提供的自定义背景图进行合成，输出一张 JPG 图像。
 
 **请求参数：**
 
@@ -88,6 +88,8 @@ python deploy_api.py
 | input_image | file | 和`input_image_base64`二选一 | 传入的图像文件，图像文件为需为RGBA四通道图像。 |
 | input_image_base64 | str | 和`input_image`二选一 | 传入的图像文件的base64编码，图像文件为需为RGBA四通道图像。 |
 | color | str | 否 | 背景色HEX值，默认为`000000` |
+| background_image | file | 否 | 自定义背景图文件，与`background_image_base64`二选一。提供该参数时 `color` 与 `render` 将被忽略。 |
+| background_image_base64 | str | 否 | 自定义背景图的 base64，和`background_image`二选一。提供该参数时 `color` 与 `render` 将被忽略。 |
 | kb | int | 否 | 输出照片的 KB 值，默认为`None`，即不对图像进行KB调整。|
 | render | int | 否 | 渲染模式，默认为`0`。可选值为`0`、`1`、`2`，分别对应`纯色`、`上下渐变`、`中心渐变`。 |
 | dpi | int | 否 | 图像分辨率，默认为`300` |
@@ -264,11 +266,18 @@ curl -X POST "http://127.0.0.1:8080/idphoto" \
 ### 2. 添加背景色
 
 ```bash
+# 纯色背景
 curl -X POST "http://127.0.0.1:8080/add_background" \
 -F "input_image=@test.png" \
 -F "color=638cce" \
 -F "kb=200" \
 -F "render=0" \
+-F "dpi=300"
+
+# 自定义背景图
+curl -X POST "http://127.0.0.1:8080/add_background" \
+-F "input_image=@test.png" \
+-F "background_image=@demo/images/background.jpg" \
 -F "dpi=300"
 ```
 
@@ -375,6 +384,7 @@ import requests
 url = "http://127.0.0.1:8080/add_background"
 input_image_path = "test.png"
 
+# 示例1：使用纯色背景
 files = {"input_image": open(input_image_path, "rb")}
 data = {
     "color": '638cce',
@@ -382,10 +392,16 @@ data = {
     "render": 0,
     "dpi": 300,
 }
-
 response = requests.post(url, files=files, data=data).json()
+print(response)
 
-# response为一个json格式字典，包含status和image_base64
+# 示例2：使用自定义背景图
+files = {
+    "input_image": open(input_image_path, "rb"),
+    "background_image": open("demo/images/background.jpg", "rb"),
+}
+data = {"dpi": 300}
+response = requests.post(url, files=files, data=data).json()
 print(response)
 ```
 

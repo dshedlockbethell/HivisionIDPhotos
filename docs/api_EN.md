@@ -76,7 +76,7 @@ It is important to note that both generated photos are transparent (RGBA four-ch
 
 API Name: `add_background`
 
-The logic of the `Add Background Color` API is to receive an RGBA image (transparent image) and add a background color based on `color`, composing a JPG image.
+The logic of the `Add Background Color` API is to receive an RGBA image (transparent image) and either add a background color based on `color` or composite it with a custom background image supplied via `background_image`, returning a JPG image.
 
 **Request Parameters:**
 
@@ -84,7 +84,9 @@ The logic of the `Add Background Color` API is to receive an RGBA image (transpa
 | :--- | :--- | :--- | :--- |
 | input_image | file | Choose one of `input_image` or `input_image_base64` | The input image file, which needs to be an RGB three-channel image. |
 | input_image_base64 | str | Choose one of `input_image` or `input_image_base64` | The base64 encoding of the input image file, which needs to be an RGB three-channel image. |
-| color | str | Yes | The background color in hexadecimal format, e.g., `#000000` for black. |
+| color | str | No | The background color in hexadecimal format, e.g., `#000000` for black. |
+| background_image | file | No | Custom background image file. Choose one of `background_image` or `background_image_base64`. When provided, `color` and `render` are ignored. |
+| background_image_base64 | str | No | Base64 string for the custom background image. Choose one of `background_image` or `background_image_base64`. When provided, `color` and `render` are ignored. |
 | kb | int | No | The target file size in KB. If the specified KB value is less than the original file, it adjusts the compression rate. If the specified KB value is greater than the source file, it increases the KB value by adding information to the file header, aiming for the final size of the image to match the specified KB value. |
 | render | int | No | The rendering mode, with a default value of `0`. Available values are `0`, `1`, and `2`. |
 | dpi | int | No | The image resolution, with a default value of `300`. |
@@ -257,11 +259,18 @@ curl -X POST "http://127.0.0.1:8080/idphoto" \
 ### 2. Add Background Color
 
 ```bash
+# Solid color background
 curl -X POST "http://127.0.0.1:8080/add_background" \
 -F "input_image=@test.png" \
 -F "color=638cce" \
 -F "kb=200" \
 -F "render=0" \
+-F "dpi=300"
+
+# Custom background image
+curl -X POST "http://127.0.0.1:8080/add_background" \
+-F "input_image=@test.png" \
+-F "background_image=@demo/images/background.jpg" \
 -F "dpi=300"
 ```
 
@@ -366,6 +375,7 @@ import requests
 url = "http://127.0.0.1:8080/add_background"
 input_image_path = "test.png"
 
+# Example 1: solid color background
 files = {"input_image": open(input_image_path, "rb")}
 data = {
     "color": '638cce',
@@ -373,10 +383,16 @@ data = {
     "render": 0,
     "dpi": 300,
 }
-
 response = requests.post(url, files=files, data=data).json()
+print(response)
 
-# response is a JSON formatted dictionary containing status and image_base64
+# Example 2: custom background image
+files = {
+    "input_image": open(input_image_path, "rb"),
+    "background_image": open("demo/images/background.jpg", "rb"),
+}
+data = {"dpi": 300}
+response = requests.post(url, files=files, data=data).json()
 print(response)
 ```
 

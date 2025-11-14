@@ -241,10 +241,14 @@ python inference.py -t human_matting -i demo/images/test0.jpg -o ./idphoto_matti
 
 ## 3. 透明图增加底色
 
-输入 1 张 4 通道透明 png，获得 1 张增加了底色的 3通道图像
+输入 1 张 4 通道透明 png，获得 1 张增加了底色的 3通道图像。除了通过 `-c/--color` 指定背景色，还可以通过 `--background_image` 传入一张任意尺寸的背景图像，程序会自动按照证件照的长宽比等比缩放并居中裁切。
 
 ```python
+# 使用纯色背景
 python inference.py -t add_background -i ./idphoto.png -o ./idphoto_ab.jpg  -c 4f83ce -k 30 -r 1
+
+# 使用自定义背景图像
+python inference.py -t add_background -i ./idphoto.png -o ./idphoto_custom_bg.jpg --background_image ./demo/images/background.jpg
 ```
 
 ## 4. 得到六寸排版照
